@@ -30,7 +30,13 @@ enum PacketType {
     PT_CLIENT_REGISTER,
     PT_OK,
     PT_BALL_INFO,
-    PT_BALL_DISCONNECT
+    PT_BALL_DISCONNECT,
+    PT_WORLD_START,
+    PT_CHUNK_START,
+    PT_BLOCK_START,
+    PT_BLOCK_END,
+    PT_CHUNK_END,
+    PT_WORLD_END
 };
 
 class PacketTools {
@@ -44,6 +50,8 @@ public:
 
         net::packet::MetaPacket metapacket;
         metapacket.set_packet(buffer, size);
+
+        free(buffer);
 
         return metapacket;
     }

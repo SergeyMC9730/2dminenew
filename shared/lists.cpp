@@ -18,17 +18,18 @@
 
 #include "lists.h"
 
-std::vector<Ball *> Lists::balls;
+std::vector<Player *> Lists::players = {};
+World *Lists::world = nullptr;
 
-void Lists::clearBalls() {
+void Lists::clearPlayers() {
     int i = 0;
     
-    while(i < balls.size()) {
-        delete balls[i];
+    while(i < players.size()) {
+        delete players[i];
         i++;
     }
 
-    balls.clear();
+    players.clear();
     
     return;
 }

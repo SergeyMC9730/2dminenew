@@ -20,6 +20,8 @@ syntax = "proto3";
 
 package net.packet;
 
-message BallDisconnect {
-    uint32 id = 1;
+message ChunkTransmitPacket {
+	uint32 blockArraySize = 1;
+    uint32 chunkArrayIndex = 2;
+    sint32 worldXposition = 3;
 }

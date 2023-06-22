@@ -42,6 +42,8 @@ void net::network_thread(std::string host, uint16_t port) {
         void *buffer = malloc(MAX_PACKET_SIZE);
         ssize_t n = 0;
 
+        int world_chunk_index = 0;
+
         while (true) {
             n = net::connector.read(buffer, MAX_PACKET_SIZE);
 
@@ -53,7 +55,7 @@ void net::network_thread(std::string host, uint16_t port) {
             net::packet::MetaPacket packet;
             packet.ParseFromArray(buffer, 1024);
 
-            // std::cout << "Received packet id " << packet.type() << std::endl;
+            std::cout << "Received packet id " << packet.type() << std::endl;
         
             switch(packet.type()) {
                 case PT_HELLO: {
@@ -64,17 +66,55 @@ void net::network_thread(std::string host, uint16_t port) {
                     PacketTools::sendPacket(packet, net::connector);
                     break;
                 }
+                case PT_WORLD_START: {
+                    //auto wdata = PacketTools::receivePacket<net::packet::WorldTransmitPacket>(packet);
+                    std::cout << "Creating new world!\n";
+                    Lists::world = new World();
+                    PacketTools::sendEmptyPacket(PT_WORLD_END, net::connector);
+                    break;
+                }
+                case PT_CHUNK_START: {
+                    if (Lists::world != nullptr) {
+                        std::cout << "Creating new chunk\n";
+                        auto cdata = PacketTools::receivePacket<net::packet::ChunkTransmitPacket>(packet);
+                        auto chunk = new Chunk();
+                        world_chunk_index = cdata.chunkarrayindex();
+                        chunk->_chunkIndex = cdata.chunkarrayindex();
+                        chunk->_worldXposition = cdata.worldxposition();
+                        Lists::world->_chunks.push_back(chunk);
+                    }
+                    PacketTools::sendEmptyPacket(PT_CHUNK_END, net::connector);
+                    break;
+                    // Lists::world
+                }
+                case PT_BLOCK_START: {
+                    if (Lists::world != nullptr) {
+                        auto bdata = PacketTools::receivePacket<net::packet::BlockTransmitPacket>(packet);
+                    
+                        auto block = new Block();
+                        block->_chunk_index = bdata.chunk_index();
+                        block->_id = bdata.id();
+                        block->_x = bdata.x();
+                        block->_y = bdata.y();
+
+                        std::cout << "Block " << block->_id << ". Pos: " << block->_x << ":" << block->_y << " in chunk " << block->_chunk_index << "\n";
+
+                        Lists::world->_chunks[world_chunk_index]->_blocks.push_back(block);
+                    }
+                    PacketTools::sendEmptyPacket(PT_BLOCK_END, net::connector);
+                    break;
+                }
                 case PT_BALL_DISCONNECT: {
-                    auto b = PacketTools::receivePacket<net::packet::BallDisconnect>(packet);
+                    auto b = PacketTools::receivePacket<net::packet::PlayerDisconnectPacket>(packet);
                     int i = 0;
 
-                    while(i < Lists::balls.size()) {
-                        auto ball = Lists::balls[i];
-                        if (ball != nullptr) {
-                            if (b.id() == ball->getID()) {
-                                delete ball;
-                                ball = nullptr;
-                                Lists::balls[i] = nullptr;
+                    while(i < Lists::players.size()) {
+                        auto player = Lists::players[i];
+                        if (player != nullptr) {
+                            if (b.id() == player->getID()) {
+                                delete player;
+                                player = nullptr;
+                                Lists::players[i] = nullptr;
                                 break;
                             }
                         }
@@ -84,32 +124,32 @@ void net::network_thread(std::string host, uint16_t port) {
                     break;
                 }
                 case PT_BALL_INFO: {
-                    bool ball_exists = false;
+                    bool player_exists = false;
                     int i = 0;
-                    Ball *client_ball = nullptr;
+                    Player *client_player = nullptr;
                             
-                    auto b = PacketTools::receivePacket<net::packet::BallInfo>(packet);
+                    auto b = PacketTools::receivePacket<net::packet::PlayerInfoPacket>(packet);
 
-                    while(i < Lists::balls.size()) {
-                        auto ball = Lists::balls[i];
-                        if (ball != nullptr) {
-                            if (b.id() == ball->getID()) {
-                                ball_exists = true;
-                                client_ball = ball;
+                    while(i < Lists::players.size()) {
+                        auto player = Lists::players[i];
+                        if (player != nullptr) {
+                            if (b.id() == player->getID()) {
+                                player_exists = true;
+                                client_player = player;
                                 break;
                             }
                         }
                         i++;
                     }
 
-                    if (ball_exists) {
-                        if (!client_ball->isClient()) {
-                            client_ball->x = b.x();
-                            client_ball->y = b.y();
+                    if (player_exists) {
+                        if (!client_player->isClient()) {
+                            client_player->x = b.x();
+                            client_player->y = b.y();
                         }
                     } else {
-                        client_ball = new Ball(b);
-                        Lists::balls.push_back(client_ball);
+                        client_player = new Player(b);
+                        Lists::players.push_back(client_player);
                     }
 
                     break;
@@ -128,14 +168,14 @@ void net::network_thread(std::string host, uint16_t port) {
 
         while(true) {
             int i = 0;
-            while(i < Lists::balls.size()) {
-                if (Lists::balls[i] != nullptr) {
-                    if (Lists::balls[i]->isClient() && Lists::balls[i]->modified) {
-                        auto balldata = Lists::balls[i]->generate();
-                        auto packet = PacketTools::constructPacket<net::packet::BallInfo>(balldata);
+            while(i < Lists::players.size()) {
+                if (Lists::players[i] != nullptr) {
+                    if (Lists::players[i]->isClient() && Lists::players[i]->modified) {
+                        auto playerdata = Lists::players[i]->generate();
+                        auto packet = PacketTools::constructPacket<net::packet::PlayerInfoPacket>(playerdata);
                         packet.set_type(PT_BALL_INFO);
                         PacketTools::sendPacket(packet, net::connector);
-                        Lists::balls[i]->modified = false;
+                        Lists::players[i]->modified = false;
                     }
                 }
                 i++;

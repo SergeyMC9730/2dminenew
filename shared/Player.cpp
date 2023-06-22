@@ -16,16 +16,41 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
-
-#include <vector>
 #include "Player.h"
-#include "World.h"
 
-namespace Lists {
-    extern std::vector<Player *> players;
+#include <cstdlib>
 
-    extern World *world;
+Player::Player() {
+    unique_id = rand();
+    client = true;
+}
+Player::Player(net::packet::PlayerInfoPacket player) {
+    unique_id = player.id();
+    x = player.x();
+    y = player.y();
+}
 
-    void clearPlayers();
+net::packet::PlayerInfoPacket Player::generate() {
+    net::packet::PlayerInfoPacket player;
+
+    player.set_id(unique_id);
+    player.set_x(x);
+    player.set_y(y);
+
+    return player;
+}
+net::packet::PlayerDisconnectPacket Player::generateDisconnect() {
+    net::packet::PlayerDisconnectPacket player;
+
+    player.set_id(unique_id);
+
+    return player;
+}
+
+uint32_t Player::getID() {
+    return unique_id;
+}
+
+bool Player::isClient() {
+    return client;
 }

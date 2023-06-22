@@ -18,16 +18,16 @@
 
 #pragma once
 
-#include <BallInfo.pb.h>
-#include <BallDisconnect.pb.h>
+#include <PlayerInfoPacket.pb.h>
+#include <PlayerDisconnectPacket.pb.h>
 
-class Ball {
+class Player {
 protected:
     uint32_t unique_id = 0;
     bool client = false;
 public:
-    Ball();
-    Ball(net::packet::BallInfo ball);
+    Player();
+    Player(net::packet::PlayerInfoPacket player);
 
     double x = 0;
     double y = 0;
@@ -35,8 +35,8 @@ public:
 
     bool modified = true;
 
-    net::packet::BallInfo generate();
-    net::packet::BallDisconnect generateDisconnect();
+    net::packet::PlayerInfoPacket generate();
+    net::packet::PlayerDisconnectPacket generateDisconnect();
 
     uint32_t getID();
 

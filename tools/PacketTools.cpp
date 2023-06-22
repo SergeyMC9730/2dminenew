@@ -96,6 +96,8 @@ void PacketTools::sendPacket(net::packet::MetaPacket &packet, sockpp::tcp_connec
 
     free(additional_data);
     free(data);
+
+    // std::cout << "Sent packet " << packet.type() << "\n";
 }
 
 void PacketTools::sendPacket(net::packet::MetaPacket &packet, sockpp::tcp_socket &sock) {
@@ -114,6 +116,8 @@ void PacketTools::sendPacket(net::packet::MetaPacket &packet, sockpp::tcp_socket
 
     free(additional_data);
     free(data);
+
+    // std::cout << "Sent packet " << packet.type() << "\n";
 }
 
 void PacketTools::sendEmptyPacket(uint32_t type, sockpp::tcp_socket &sock) {

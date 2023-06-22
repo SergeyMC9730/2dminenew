@@ -20,8 +20,6 @@ syntax = "proto3";
 
 package net.packet;
 
-message BallInfo {
-	double x = 1;
-    double y = 2;
-    uint32 id = 3;
+message PlayerDisconnectPacket {
+    uint32 id = 1;
 }

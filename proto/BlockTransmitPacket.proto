@@ -16,41 +16,13 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "Ball.h"
+syntax = "proto3";
 
-#include <cstdlib>
+package net.packet;
 
-Ball::Ball() {
-    unique_id = rand();
-    client = true;
-}
-Ball::Ball(net::packet::BallInfo ball) {
-    unique_id = ball.id();
-    x = ball.x();
-    y = ball.y();
-}
-
-net::packet::BallInfo Ball::generate() {
-    net::packet::BallInfo ball;
-
-    ball.set_id(unique_id);
-    ball.set_x(x);
-    ball.set_y(y);
-
-    return ball;
-}
-net::packet::BallDisconnect Ball::generateDisconnect() {
-    net::packet::BallDisconnect ball;
-
-    ball.set_id(unique_id);
-
-    return ball;
-}
-
-uint32_t Ball::getID() {
-    return unique_id;
-}
-
-bool Ball::isClient() {
-    return client;
+message BlockTransmitPacket {
+	uint32 x = 1;
+    uint32 y = 2;
+    uint32 id = 3;
+    uint32 chunk_index = 4;
 }

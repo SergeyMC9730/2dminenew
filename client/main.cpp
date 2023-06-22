@@ -23,72 +23,91 @@
 #include <raylib.h>
 
 #include <lists.h>
+#include <WorldGeneratorGiberrish.h>
 
 #include "network.h"
+#include "WorldRenderer.h"
 
-std::vector<Vector2> balls = {};
+std::vector<Vector2> players = {};
 
 int main() {
-    int resolution_x = 640;
-    int resolution_y = 480;
+    int resolution_x = 1920;
+    int resolution_y = 1080;
 
     InitWindow(resolution_x, resolution_y, "raylib");
     SetTargetFPS(144);
 
-    Ball *b = new Ball();
+    Player *b = new Player();
     b->x = resolution_x / 2;
     b->y = resolution_y / 2;
 
-    Lists::balls.push_back(b);
+    Lists::players.push_back(b);
 
-    //Vector2 ballPosition = { 640.f, 360.f };
+    Vector2 cameraPosition = { 0.f, 0.f };
 
-    float speed = 1.2f;
+    float speed = 5.f;
 
     net::network_thread("localhost", 1111);
 
+    // WorldGeneratorGiberrish *wg = new WorldGeneratorGiberrish();
+    // Lists::world = wg->generateWorld(111);
+    // delete wg;
+    // wg = nullptr;
+
+    Camera2D cam;
+    cam.zoom = 0.1f;
+    cam.rotation = 0.f;
+
     while(!WindowShouldClose()) {
-        // if (IsKeyDown(KEY_RIGHT)) {
-        //     b->x += speed;
-        //     b->modified = true;
-        // }
-        // if (IsKeyDown(KEY_LEFT)) {
-        //     b->x -= speed;
-        //     b->modified = true;
-        // }
-        // if (IsKeyDown(KEY_UP))    {
-        //     b->y -= speed;
-        //     b->modified = true;
-        // }
-        // if (IsKeyDown(KEY_DOWN))  {
-        //     b->y += speed;
-        //     b->modified = true;
-        // }
+
+        if (IsKeyDown(KEY_RIGHT)) {
+            cameraPosition.x += speed;
+        }
+        if (IsKeyDown(KEY_LEFT)) {
+            cameraPosition.x -= speed;
+        }
+        if (IsKeyDown(KEY_UP)) {
+            cameraPosition.y -= speed;
+        }
+        if (IsKeyDown(KEY_DOWN))  {
+            cameraPosition.y += speed;
+        }
 
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             auto mouse_pos = GetMousePosition();
-            b->x = mouse_pos.x;
-            b->y = mouse_pos.y;
+            b->x = mouse_pos.x + cameraPosition.x;
+            b->x /= cam.zoom;
+            b->y = mouse_pos.y + cameraPosition.y;
+            b->y /= cam.zoom;
             b->modified = true;
         }
+
+        cam.target = cameraPosition;
 
         int i = 0;
 
         BeginDrawing();
+        BeginMode2D(cam);
 
         ClearBackground(RAYWHITE);
 
-        while(i < Lists::balls.size()) {
-            auto ball = Lists::balls[i];
-            if (ball != nullptr) {
-                Vector2 pos = { (float)ball->x, (float)ball->y };
-                DrawCircleV(pos, 50, (ball->isClient()) ? BLUE : MAROON);
+        if (Lists::world != nullptr) {
+            WorldRenderer::render(Lists::world);
+        }
+
+        DrawRectangle(2, 2, 30, 30, BLACK);
+
+        while(i < Lists::players.size()) {
+            auto player = Lists::players[i];
+            if (player != nullptr) {
+                Vector2 pos = { (float)player->x, (float)player->y };
+                DrawCircleV(pos, 50, (player->isClient()) ? BLUE : MAROON);
             }
             i++;
         }
 
+        EndMode2D();
         DrawFPS(3, 3);
-
         EndDrawing();
     }
 
