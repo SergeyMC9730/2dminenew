@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package net.packet;
+
+message TestPacket {
+	uint32 pid = 1;
+    optional string sender = 2;
+	string msg = 3;
+}

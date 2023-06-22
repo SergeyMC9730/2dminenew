@@ -1,0 +1,6 @@
+proto/gen/**
+build/**
+build
+proto/gen
+.vscode/**
+.vscode
